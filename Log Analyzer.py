@@ -1,31 +1,41 @@
 import re
+from datetime import datetime
 # import json
 IP_PATTERN = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
 ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL)\b"
+header = "=" * 50 + "\n             LOG ANALYZER\n" + "=" * 50
+content_header = "-" * 50 + "\n             LOG CONTENT\n" + "-" * 50
 
 
 def analyze_log(filename):
     line_count = 0
     ip_count = {}
     error_count = {}
+    log_data = []
 
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             line_count += 1
+            log_data.append(line.strip())
             for ip in re.findall(IP_PATTERN, line):
                 ip_count[ip] = ip_count.get(ip, 0) + 1
             for error in re.findall(ERROR_PATTERN, line, re.IGNORECASE):
                 error = error.upper()
                 error_count[error] = error_count.get(error, 0) + 1
-    return line_count, ip_count, error_count
+    return line_count, ip_count, error_count, log_data
 
 
-def generate_report(filename, line_count, ip_count, error_count):
-
+def generate_report(filename, line_count, ip_count, error_count, log_data):
+    analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(header)
     print(f"""File        : {filename}
 Status      : Loaded Successfully
 Total Lines : {line_count}
+Analysis Date: {analysis_time}
 """)
+    print(content_header)
+    for line in log_data:
+        print(line)
     if ip_count:
         print(f"Total IP Addresses Occurrences: {sum(ip_count.values())}")
         print(f"Unique IP Addresses: {len(ip_count)}")
@@ -43,8 +53,8 @@ def main():
     print("Welcome to the Log Analyzer Tool")
     try:
         filename = input("Enter the log file name: ")
-        line_count, ip_count, error_count = analyze_log(filename)
-        generate_report(filename, line_count, ip_count, error_count)
+        line_count, ip_count, error_count, log_data = analyze_log(filename)
+        generate_report(filename, line_count, ip_count, error_count, log_data)
     except FileNotFoundError:
         print("File not found.")
 
