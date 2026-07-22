@@ -1,8 +1,11 @@
 import re
 from datetime import datetime
-# import json
+import json
+
 IP_PATTERN = r"\b(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\b"
 ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL|SEVERE|PANIC)\b"
+
+# TODO: Refactor analysis timestamp handling
 
 HEADER = "=" * 50 + "\n                 LOG ANALYZER\n" + "=" * 50
 FOOTER = "=" * 50 + "\n                END OF REPORT\n" + "=" * 50
@@ -109,6 +112,22 @@ Analysis Date : {analysis_time}
     print(FOOTER)
 
 
+def export_to_json(filename, line_count, ip_count, error_count, log_data):
+    analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    report_data = {
+        "file": filename,
+        "analysis_date": analysis_time,
+        "total_lines": line_count,
+        "ip_addresses": ip_count,
+        "errors": error_count,
+        "log_content": log_data
+    }
+
+    with open("report.json", "w", encoding="utf-8") as f:
+        json.dump(report_data, f, indent=4, ensure_ascii=False)
+    print("Report exported to report.json")
+
+
 def main():
     print("Welcome to the Log Analyzer Tool")
     try:
@@ -121,7 +140,13 @@ def main():
             error_count,
             log_data
         )
-
+        export_to_json(
+            filename,
+            line_count,
+            ip_count,
+            error_count,
+            log_data
+        )
     except FileNotFoundError:
         print("File not found.")
 
