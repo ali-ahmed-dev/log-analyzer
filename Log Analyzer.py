@@ -1,10 +1,10 @@
 import re
 from datetime import datetime
 # import json
-IP_PATTERN = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
-ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL)\b"
-HEADER = "=" * 50 + "\n                 LOG ANALYZER\n" + "=" * 50
+IP_PATTERN = r"\b(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\b"
+ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL|SEVERE|PANIC)\b"
 
+HEADER = "=" * 50 + "\n                 LOG ANALYZER\n" + "=" * 50
 FOOTER = "=" * 50 + "\n                END OF REPORT\n" + "=" * 50
 
 
