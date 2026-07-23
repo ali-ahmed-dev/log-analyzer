@@ -75,9 +75,9 @@ def generate_report(filename, line_count, ip_count, error_count, log_data):
 
     report.append(HEADER)
     report.append(f"""File          : {filename}
-    Status        : Completed Successfully
-    Total Lines   : {line_count}
-    Analysis Date : {analysis_time}
+Status        : Completed Successfully
+Total Lines   : {line_count}
+Analysis Date : {analysis_time}
     """)
 
     report.append(LOG_CONTENT_HEADER)
@@ -132,6 +132,12 @@ def export_to_json(filename, line_count, ip_count, error_count, log_data):
     print("Report exported to report.json")
 
 
+def export_to_txt(report_text):
+    with open("report.txt", "w", encoding="utf-8") as file:
+        file.write(report_text)
+    print("Report exported to report.txt")
+
+
 def main():
     print("Welcome to the Log Analyzer Tool")
     try:
@@ -151,6 +157,7 @@ def main():
             error_count,
             log_data
         )
+        export_to_txt(report_text)
 
         print(report_text)
 
