@@ -5,8 +5,6 @@ import json
 IP_PATTERN = r"\b(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\b"
 ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL|SEVERE|PANIC)\b"
 
-# TODO: Refactor analysis timestamp handling
-
 HEADER = "=" * 50 + "\n                 LOG ANALYZER\n" + "=" * 50
 FOOTER = "=" * 50 + "\n                END OF REPORT\n" + "=" * 50
 
@@ -68,8 +66,7 @@ def analyze_log(filename):
     return line_count, ip_count, error_count, log_data
 
 
-def generate_report(filename, line_count, ip_count, error_count, log_data):
-    analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def generate_report(filename, line_count, ip_count, error_count, log_data, analysis_time):
 
     report = []
 
@@ -78,7 +75,7 @@ def generate_report(filename, line_count, ip_count, error_count, log_data):
 Status        : Completed Successfully
 Total Lines   : {line_count}
 Analysis Date : {analysis_time}
-    """)
+""")
 
     report.append(LOG_CONTENT_HEADER)
     for line in log_data:
@@ -88,8 +85,6 @@ Analysis Date : {analysis_time}
         report.append(IP_HEADER)
         for ip, count in ip_count.items():
             report.append(f"{ip} → {count}")
-        report.append(f"Total IPs     : {sum(ip_count.values())}")
-        report.append(f"Unique IPs    : {len(ip_count)}")
     else:
         report.append(NO_IP_HEADER)
         report.append("No IP addresses found in the log file.")
@@ -98,8 +93,6 @@ Analysis Date : {analysis_time}
         report.append(ERROR_HEADER)
         for error, count in error_count.items():
             report.append(f"{error} → {count}")
-        report.append(f"Total Errors  : {sum(error_count.values())}")
-        report.append(f"Unique Errors : {len(error_count)}")
     else:
         report.append(NO_ERROR_HEADER)
         report.append("No errors found in the log file.")
@@ -116,8 +109,7 @@ Analysis Date : {analysis_time}
     return "\n".join(report)
 
 
-def export_to_json(filename, line_count, ip_count, error_count, log_data):
-    analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def export_to_json(filename, line_count, ip_count, error_count, log_data, analysis_time):
     report_data = {
         "file": filename,
         "analysis_date": analysis_time,
@@ -127,8 +119,8 @@ def export_to_json(filename, line_count, ip_count, error_count, log_data):
         "log_content": log_data
     }
 
-    with open("report.json", "w", encoding="utf-8") as f:
-        json.dump(report_data, f, indent=4, ensure_ascii=False)
+    with open("report.json", "w", encoding="utf-8") as file:
+        json.dump(report_data, file, indent=4, ensure_ascii=False)
     print("Report exported to report.json")
 
 
@@ -142,24 +134,31 @@ def main():
     print("Welcome to the Log Analyzer Tool")
     try:
         filename = input("Enter the log file name: ")
+
+        analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         line_count, ip_count, error_count, log_data = analyze_log(filename)
         report_text = generate_report(
             filename,
             line_count,
             ip_count,
             error_count,
-            log_data
+            log_data,
+            analysis_time
         )
+
+        print(report_text)
+
+        export_to_txt(report_text)
+
         export_to_json(
             filename,
             line_count,
             ip_count,
             error_count,
-            log_data
+            log_data,
+            analysis_time
         )
-        export_to_txt(report_text)
-
-        print(report_text)
 
     except FileNotFoundError:
         print("File not found.")
