@@ -71,45 +71,49 @@ def analyze_log(filename):
 def generate_report(filename, line_count, ip_count, error_count, log_data):
     analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    print(HEADER)
-    print(f"""File          : {filename}
-Status        : Completed Successfully
-Total Lines   : {line_count}
-Analysis Date : {analysis_time}
-""")
+    report = []
 
-    print(LOG_CONTENT_HEADER)
+    report.append(HEADER)
+    report.append(f"""File          : {filename}
+    Status        : Completed Successfully
+    Total Lines   : {line_count}
+    Analysis Date : {analysis_time}
+    """)
+
+    report.append(LOG_CONTENT_HEADER)
     for line in log_data:
-        print(line)
+        report.append(line)
 
     if ip_count:
-        print(IP_HEADER)
+        report.append(IP_HEADER)
         for ip, count in ip_count.items():
-            print(f"{ip} → {count}")
-        print(f"Total IPs     : {sum(ip_count.values())}")
-        print(f"Unique IPs    : {len(ip_count)}")
+            report.append(f"{ip} → {count}")
+        report.append(f"Total IPs     : {sum(ip_count.values())}")
+        report.append(f"Unique IPs    : {len(ip_count)}")
     else:
-        print(NO_IP_HEADER)
-        print("No IP addresses found in the log file.")
+        report.append(NO_IP_HEADER)
+        report.append("No IP addresses found in the log file.")
 
     if error_count:
-        print(ERROR_HEADER)
+        report.append(ERROR_HEADER)
         for error, count in error_count.items():
-            print(f"{error} → {count}")
-        print(f"Total Errors  : {sum(error_count.values())}")
-        print(f"Unique Errors : {len(error_count)}")
+            report.append(f"{error} → {count}")
+        report.append(f"Total Errors  : {sum(error_count.values())}")
+        report.append(f"Unique Errors : {len(error_count)}")
     else:
-        print(NO_ERROR_HEADER)
-        print("No errors found in the log file.")
+        report.append(NO_ERROR_HEADER)
+        report.append("No errors found in the log file.")
 
-    print(SUMMARY_HEADER)
-    print(f"Total Lines   : {line_count}")
-    print(f"Total IPs     : {sum(ip_count.values())}")
-    print(f"Unique IPs    : {len(ip_count)}")
-    print(f"Total Errors  : {sum(error_count.values())}")
-    print(f"Unique Errors : {len(error_count)}")
+    report.append(SUMMARY_HEADER)
+    report.append(f"Total Lines   : {line_count}")
+    report.append(f"Total IPs     : {sum(ip_count.values())}")
+    report.append(f"Unique IPs    : {len(ip_count)}")
+    report.append(f"Total Errors  : {sum(error_count.values())}")
+    report.append(f"Unique Errors : {len(error_count)}")
 
-    print(FOOTER)
+    report.append(FOOTER)
+
+    return "\n".join(report)
 
 
 def export_to_json(filename, line_count, ip_count, error_count, log_data):
@@ -133,7 +137,7 @@ def main():
     try:
         filename = input("Enter the log file name: ")
         line_count, ip_count, error_count, log_data = analyze_log(filename)
-        generate_report(
+        report_text = generate_report(
             filename,
             line_count,
             ip_count,
@@ -147,6 +151,9 @@ def main():
             error_count,
             log_data
         )
+
+        print(report_text)
+
     except FileNotFoundError:
         print("File not found.")
 
