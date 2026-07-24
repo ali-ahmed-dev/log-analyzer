@@ -1,6 +1,8 @@
 # Log Analyzer
 
-A Python tool for analyzing log files, detecting IP addresses and errors, and exporting reports in TXT and JSON formats.
+A Python tool for analyzing log files, detecting IP addresses and error keywords, and generating professional reports in TXT and JSON formats.
+
+---
 
 ## Features
 
@@ -12,38 +14,85 @@ A Python tool for analyzing log files, detecting IP addresses and errors, and ex
 - Export reports to TXT.
 - Export analysis data to JSON.
 
-## Usage
+---
 
-1. Clone the repository:
+## Installation
 
-```
+Clone the repository:
+
+```bash
 git clone https://github.com/ali-ahmed-dev/log-analyzer.git
 ```
-2. Navigate to the project directory:
-```
+
+Navigate to the project directory:
+
+```bash
 cd log-analyzer
 ```
 
-3. Run the program:
-```
+---
+
+## Usage
+
+Run the program:
+
+```bash
 python log_analyzer.py
 ```
-4. Enter the log file name when prompted.
+
+Then enter the log file name when prompted.
+
+---
+
+## Project Structure
+
+```text
+log-analyzer/
+│
+├── log_analyzer.py
+└── README.md
+```
+
+---
 
 ## Technologies
 
 - Python 3
-- Regular Expressions (re)
+- Regular Expressions (`re`)
 - JSON
 - datetime
 
-  ## Requirements
+---
+
+## Requirements
+
 - Python 3.x
-- No external libraries needed (uses standard library only)
+- No external libraries required (uses Python Standard Library only).
 
-  ## Example
-Enter the log file name: server.log
+---
 
-Total Lines: 150
-Unique IPs: 12
-Total Errors: 5
+## Example
+
+```text
+Welcome to the Log Analyzer Tool
+
+Enter the log file name:
+server.log
+
+Status        : Completed Successfully
+Total Lines   : 150
+Unique IPs    : 12
+Total Errors  : 5
+```
+
+---
+
+## Current Version
+
+**v1.0.0**
+
+---
+
+## Author
+
+**Ali Ahmed**
