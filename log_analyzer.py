@@ -163,6 +163,18 @@ def main():
     except FileNotFoundError:
         print("File not found.")
 
+    except PermissionError:
+        print(f"Error: Permission denied for '{filename}'.")
+        return
+
+    except UnicodeDecodeError:
+        print(f"Error: '{filename}' is not a valid UTF-8 text file.")
+        return
+
+    except OSError as e:
+        print(f"Error: {e}")
+        return
+
 
 if __name__ == "__main__":
     main()
