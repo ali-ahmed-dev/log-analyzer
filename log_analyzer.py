@@ -50,12 +50,15 @@ def analyze_log(filename):
     line_count = 0
     ip_count = {}
     error_count = {}
-    log_data = []
+    log_preview = []
+    max_preview_lines = 100
 
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             line_count += 1
-            log_data.append(line.strip())
+            if len(log_preview) >= max_preview_lines:
+                log_preview.pop(0)
+            log_preview.append(line.strip())
             for ip in re.findall(IP_PATTERN, line):
                 ip_count[ip] = ip_count.get(ip, 0) + 1
 
@@ -63,10 +66,10 @@ def analyze_log(filename):
                 error = error.upper()
                 error_count[error] = error_count.get(error, 0) + 1
 
-    return line_count, ip_count, error_count, log_data
+    return line_count, ip_count, error_count, log_preview
 
 
-def generate_report(filename, line_count, ip_count, error_count, log_data, analysis_time):
+def generate_report(filename, line_count, ip_count, error_count, log_preview, analysis_time):
 
     report = []
 
@@ -78,7 +81,7 @@ Analysis Date : {analysis_time}
 """)
 
     report.append(LOG_CONTENT_HEADER)
-    for line in log_data:
+    for line in log_preview:
         report.append(line)
 
     if ip_count:
@@ -109,14 +112,14 @@ Analysis Date : {analysis_time}
     return "\n".join(report)
 
 
-def export_to_json(filename, line_count, ip_count, error_count, log_data, analysis_time):
+def export_to_json(filename, line_count, ip_count, error_count, log_preview, analysis_time):
     report_data = {
         "file": filename,
         "analysis_date": analysis_time,
         "total_lines": line_count,
         "ip_addresses": ip_count,
         "errors": error_count,
-        "log_content": log_data
+        "log_content": log_preview
     }
 
     with open("report.json", "w", encoding="utf-8") as file:
@@ -137,13 +140,13 @@ def main():
 
         analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        line_count, ip_count, error_count, log_data = analyze_log(filename)
+        line_count, ip_count, error_count, log_preview = analyze_log(filename)
         report_text = generate_report(
             filename,
             line_count,
             ip_count,
             error_count,
-            log_data,
+            log_preview,
             analysis_time
         )
 
@@ -156,7 +159,7 @@ def main():
             line_count,
             ip_count,
             error_count,
-            log_data,
+            log_preview,
             analysis_time
         )
 

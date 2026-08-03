@@ -13,6 +13,7 @@ A Python tool for analyzing log files, detecting IP addresses and error keywords
 - Generate a formatted report.
 - Export reports to TXT.
 - Export analysis data to JSON.
+- Memory-efficient processing: Handles large log files (>1GB) by storing only the last 100 lines in memory.
 
 ---
 
