@@ -14,6 +14,7 @@ A Python tool for analyzing log files, detecting IP addresses and error keywords
 - Export reports to TXT.
 - Export analysis data to JSON.
 - Memory-efficient processing: Handles large log files (>1GB) by storing only the last 100 lines in memory.
+- Sorted Reports: IP addresses and error keywords are displayed in descending order of frequency (most frequent first).
 
 ---
 
@@ -90,7 +91,7 @@ Total Errors  : 5
 
 ## Current Version
 
-**v1.0.0**
+**v1.1.0**
 
 ---
 

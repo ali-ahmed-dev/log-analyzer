@@ -10,6 +10,7 @@ This document outlines the planned improvements and future roadmap for **Log Ana
 These improvements focus on reliability, performance, and maintainability.
 
 * [✓] Process log files using a streaming approach to reduce memory usage when handling very large files.
+* [✓] Sort IP addresses and error occurrences by frequency (most frequent first) in the TXT report.
 * [ ] Generate timestamp-based report filenames to prevent overwriting previous reports.
 * [ ] Improve exception handling by replacing generic exceptions with more specific ones where appropriate.
 * [ ] Validate user input before processing log files.
@@ -53,8 +54,8 @@ Larger features planned for future major versions.
 
 | Version                  | Status     |
 | ------------------------ | ---------- |
-| **Current Release**      | **v1.0.0** |
-| **Next Planned Release** | **v2.0.0** |
+| **Current Release**      | **v1.1.0** |
+| **Next Planned Release** | **v1.2.0** |
 
 ---
 

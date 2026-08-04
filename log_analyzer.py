@@ -86,7 +86,7 @@ Analysis Date : {analysis_time}
 
     if ip_count:
         report.append(IP_HEADER)
-        for ip, count in ip_count.items():
+        for ip, count in sorted(ip_count.items(), key=lambda x: x[1], reverse=True):
             report.append(f"{ip} → {count}")
     else:
         report.append(NO_IP_HEADER)
@@ -94,7 +94,7 @@ Analysis Date : {analysis_time}
 
     if error_count:
         report.append(ERROR_HEADER)
-        for error, count in error_count.items():
+        for error, count in sorted(error_count.items(), key=lambda x: x[1], reverse=True):
             report.append(f"{error} → {count}")
     else:
         report.append(NO_ERROR_HEADER)
