@@ -52,7 +52,9 @@ Then enter the log file name when prompted.
 log-analyzer/
 │
 ├── log_analyzer.py
-└── README.md
+├── README.md
+├── LICENSE
+└── .gitignore
 ```
 
 ---
@@ -91,7 +93,7 @@ Total Errors  : 5
 
 ## Current Version
 
-**v1.1.0**
+**v1.1.1**
 
 ---
 

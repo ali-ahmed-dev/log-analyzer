@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 import json
+from pathlib import Path
 
 IP_PATTERN = r"\b(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\b"
 ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL|SEVERE|PANIC)\b"
@@ -137,7 +138,9 @@ def main():
     print("Welcome to the Log Analyzer Tool")
     try:
         filename = input("Enter the log file name: ")
-
+        if not Path(filename).exists():
+            print(f"Error: File '{filename}' not found.")
+            return
         analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         line_count, ip_count, error_count, log_preview = analyze_log(filename)
@@ -162,9 +165,6 @@ def main():
             log_preview,
             analysis_time
         )
-
-    except FileNotFoundError:
-        print("File not found.")
 
     except PermissionError:
         print(f"Error: Permission denied for '{filename}'.")
