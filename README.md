@@ -11,8 +11,8 @@ A Python tool for analyzing log files, detecting IP addresses and error keywords
 - Detect and count IP addresses.
 - Detect and count error keywords.
 - Generate a formatted report.
-- Export reports to TXT.
-- Export analysis data to JSON.
+- Export reports in TXT format.
+- Export analysis data in JSON format.
 - Memory-efficient processing: Handles large log files (>1GB) by storing only the last 100 lines in memory.
 - Sorted Reports: IP addresses and error keywords are displayed in descending order of frequency (most frequent first).
 
@@ -62,6 +62,7 @@ log-analyzer/
 ## Technologies
 
 - Python 3
+- pathlib
 - Regular Expressions (`re`)
 - JSON
 - datetime
@@ -83,15 +84,23 @@ Welcome to the Log Analyzer Tool
 Enter the log file name:
 server.log
 
+==================================================
+                 LOG ANALYZER
+==================================================
 Status        : Completed Successfully
 Total Lines   : 150
 Unique IPs    : 12
 Total Errors  : 5
 ```
+---
+
+## License
+
+This project is licensed under the MIT License.
 
 ---
 
-## Current Version
+## Version
 
 **v1.1.1**
 
