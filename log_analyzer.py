@@ -114,6 +114,8 @@ Analysis Date : {analysis_time}
 
 
 def export_to_json(filename, line_count, ip_count, error_count, log_preview, analysis_time):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    json_filename = f"report_{timestamp}.json"
     report_data = {
         "file": filename,
         "analysis_date": analysis_time,
@@ -123,15 +125,17 @@ def export_to_json(filename, line_count, ip_count, error_count, log_preview, ana
         "log_content": log_preview
     }
 
-    with open("report.json", "w", encoding="utf-8") as file:
+    with open(json_filename, "w", encoding="utf-8") as file:
         json.dump(report_data, file, indent=4, ensure_ascii=False)
-    print("Report exported to report.json")
+    print(f"Report exported to {json_filename}")
 
 
 def export_to_txt(report_text):
-    with open("report.txt", "w", encoding="utf-8") as file:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    txt_filename = f"report_{timestamp}.txt"
+    with open(txt_filename, "w", encoding="utf-8") as file:
         file.write(report_text)
-    print("Report exported to report.txt")
+    print(f"Report exported to {txt_filename}")
 
 
 def main():
