@@ -141,9 +141,16 @@ def export_to_txt(report_text):
 def main():
     print("Welcome to the Log Analyzer Tool")
     try:
-        filename = input("Enter the log file name: ")
-        if not Path(filename).exists():
+        filename = input("Enter the log file name: ").strip()
+        if not filename:
+            print("Error: No file name provided.")
+            return
+        file_path = Path(filename)
+        if not file_path.exists():
             print(f"Error: File '{filename}' not found.")
+            return
+        if not file_path.is_file():
+            print(f"Error: '{filename}' is a directory, not a file.")
             return
         analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -171,16 +178,18 @@ def main():
         )
 
     except PermissionError:
-        print(f"Error: Permission denied for '{filename}'.")
+        print(f"Error: Permission denied. You do not have read access to '{filename}'.")
         return
 
     except UnicodeDecodeError:
-        print(f"Error: '{filename}' is not a valid UTF-8 text file.")
+        print(f"Error: The file '{filename}' is not a valid UTF-8 text file. Please check its encoding.")
         return
 
     except OSError as e:
-        print(f"Error: {e}")
+        print(f"Error: An operating system error occurred. Details: {e}")
         return
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 
 if __name__ == "__main__":
