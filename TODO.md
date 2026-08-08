@@ -11,7 +11,7 @@ These improvements focus on reliability, performance, and maintainability.
 
 * [✓] Process log files using a streaming approach to reduce memory usage when handling very large files.
 * [✓] Sort IP addresses and error occurrences by frequency (most frequent first).
-* [ ] Generate timestamp-based report filenames to prevent overwriting previous reports.
+* [✓] Generate timestamp-based report filenames to prevent overwriting previous reports.
 * [ ] Improve exception handling by replacing generic exceptions with more specific ones where appropriate.
 * [✓] Validate user input before processing log files.
 
@@ -54,7 +54,7 @@ Larger features planned for future major versions.
 
 | Version                  | Status     |
 | ------------------------ | ---------- |
-| **Current Release**      | **v1.1.1** |
+| **Current Release**      | **v1.1.2** |
 | **Next Planned Release** | **v1.2.0** |
 
 ---
