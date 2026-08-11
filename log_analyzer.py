@@ -47,6 +47,24 @@ SUMMARY_HEADER = (
 )
 
 
+
+def get_log_files(path):
+    """Return a list of all log files (by extension) in a directory and its subdirectories."""
+    log_extensions = {'.log', '.txt'}
+    path_obj = Path(path)
+    files = []
+
+    if path_obj.is_file():
+        return [path_obj]
+    elif path_obj.is_dir():
+        for file in path_obj.rglob('*'):
+            if file.is_file() and file.suffix.lower() in log_extensions:
+                files.append(file)
+        return files
+    else:
+        raise ValueError(f"Path '{path}' is not a valid file or directory.")
+
+
 def analyze_log(filename):
     line_count = 0
     ip_count = {}
@@ -141,48 +159,53 @@ def export_to_txt(report_text):
 def main():
     print("Welcome to the Log Analyzer Tool")
     try:
-        filename = input("Enter the log file name: ").strip()
-        if not filename:
-            print("Error: No file name provided.")
+        user_input = input("Enter the log file or directory path: ").strip()
+        if not user_input:
+            print("Error: No path provided.")
             return
-        file_path = Path(filename)
-        if not file_path.exists():
-            print(f"Error: File '{filename}' not found.")
+
+        try:
+            log_files = get_log_files(user_input)
+        except ValueError as ve:
+            print(f"Error: {ve}")
             return
-        if not file_path.is_file():
-            print(f"Error: '{filename}' is a directory, not a file.")
+
+        if not log_files:
+            print(f"No log files found in the specified path: '{user_input}'")
             return
-        analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        line_count, ip_count, error_count, log_preview = analyze_log(filename)
-        report_text = generate_report(
-            filename,
-            line_count,
-            ip_count,
-            error_count,
-            log_preview,
-            analysis_time
-        )
+        for file_path in log_files:
+            print(f"\n--- Analyzing: {file_path} ---")
+            filename = str(file_path)
+            analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            line_count, ip_count, error_count, log_preview = analyze_log(filename)
 
-        print(report_text)
+            report_text = generate_report(
+                filename,
+                line_count,
+                ip_count,
+                error_count,
+                log_preview,
+                analysis_time
+            )
 
-        export_to_txt(report_text)
-
-        export_to_json(
-            filename,
-            line_count,
-            ip_count,
-            error_count,
-            log_preview,
-            analysis_time
-        )
+            print(report_text)
+            export_to_txt(report_text)
+            export_to_json(
+                filename,
+                line_count,
+                ip_count,
+                error_count,
+                log_preview,
+                analysis_time
+            )
 
     except PermissionError:
-        print(f"Error: Permission denied. You do not have read access to '{filename}'.")
+        print(f"Error: Permission denied. You do not have read access to '{user_input}'.")
         return
 
     except UnicodeDecodeError:
-        print(f"Error: The file '{filename}' is not a valid UTF-8 text file. Please check its encoding.")
+        print(f"Error: The file '{user_input}' is not a valid UTF-8 text file. Please check its encoding.")
         return
 
     except OSError as e:

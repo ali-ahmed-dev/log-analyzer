@@ -15,6 +15,7 @@ A Python tool for analyzing log files, detecting IP addresses and error keywords
 - Export analysis data in JSON format.
 - Memory-efficient processing: Handles large log files (>1GB) by storing only the last 100 lines in memory.
 - Sorted Reports: IP addresses and error keywords are displayed in descending order of frequency (most frequent first).
+- **Recursive directory scanning**: Analyze all log files within a folder and its subfolders.
 
 ---
 
@@ -42,7 +43,7 @@ Run the program:
 python log_analyzer.py
 ```
 
-Then enter the log file name when prompted.
+Then enter the path to a log file or a directory containing log files (`.log` or `.txt`).
 
 ---
 
@@ -92,6 +93,33 @@ Total Lines   : 150
 Unique IPs    : 12
 Total Errors  : 5
 ```
+
+### Example with a Directory
+
+```text
+Welcome to the Log Analyzer Tool
+
+Enter the log file or directory path: /var/log
+
+--- Analyzing: /var/log/syslog ---
+==================================================
+                 LOG ANALYZER
+==================================================
+Status        : Completed Successfully
+Total Lines   : 1523
+Unique IPs    : 45
+Total Errors  : 12
+
+--- Analyzing: /var/log/auth.log ---
+==================================================
+                 LOG ANALYZER
+==================================================
+Status        : Completed Successfully
+Total Lines   : 342
+Unique IPs    : 18
+Total Errors  : 5
+```
+
 ---
 
 ## License
@@ -102,7 +130,7 @@ This project is licensed under the MIT License.
 
 ## Version
 
-**v1.1.3**
+**v1.2.0**
 
 ---
 
