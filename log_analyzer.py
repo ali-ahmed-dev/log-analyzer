@@ -1,218 +1,279 @@
 import re
-from datetime import datetime
 import json
 from pathlib import Path
+from datetime import datetime
+from collections import Counter
+
+
+# ===================== CONSTANTS =====================
+SEPARATOR = "=" * 50
+DASH_SEPARATOR = "-" * 50
+
+
+HEADER = SEPARATOR + "\n                 LOG ANALYZER\n" + SEPARATOR
+FOOTER = SEPARATOR + "\n                END OF REPORT\n" + SEPARATOR
+
+
+SECTION_HEADERS = {
+    "log_content": f"{DASH_SEPARATOR}\n                LOG CONTENT\n{DASH_SEPARATOR}",
+    "ip": f"{DASH_SEPARATOR}\n          IP ADDRESSES OCCURRENCES\n{DASH_SEPARATOR}",
+    "no_ip": f"{DASH_SEPARATOR}\n           NO IP ADDRESSES FOUND\n{DASH_SEPARATOR}",
+    "errors": f"{DASH_SEPARATOR}\n            ERRORS OCCURRENCES\n{DASH_SEPARATOR}",
+    "no_errors": f"{DASH_SEPARATOR}\n              NO ERRORS FOUND\n{DASH_SEPARATOR}",
+    "summary": f"{DASH_SEPARATOR}\n              SUMMARY REPORT\n{DASH_SEPARATOR}",
+}
 
 IP_PATTERN = r"\b(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\b"
 ERROR_PATTERN = r"\b(ERROR|EXCEPTION|CRITICAL|WARNING|FAILED|FATAL|SEVERE|PANIC)\b"
 
-HEADER = "=" * 50 + "\n                 LOG ANALYZER\n" + "=" * 50
-FOOTER = "=" * 50 + "\n                END OF REPORT\n" + "=" * 50
+
+LOG_EXTENSIONS = {'.log', '.txt'}
+MAX_PREVIEW_LINES = 100
 
 
-LOG_CONTENT_HEADER = (
-    "-" * 50 +
-    "\n                LOG CONTENT\n" +
-    "-" * 50
-)
+# ===================== FILE DISCOVERY =====================
+def get_log_files(path: Path) -> list[Path]:
+    """
+    Return a list of all log files in a directory (recursively) or a single file.
 
-IP_HEADER = (
-    "-" * 50 +
-    "\n          IP ADDRESSES OCCURRENCES\n" +
-    "-" * 50
-)
+    Args:
+        path (Path): File or directory path.
 
-NO_IP_HEADER = (
-    "-" * 50 +
-    "\n           NO IP ADDRESSES FOUND\n" +
-    "-" * 50
-)
+    Returns:
+        list[Path]: List of log file paths.
 
-ERROR_HEADER = (
-    "-" * 50 +
-    "\n            ERRORS OCCURRENCES\n" +
-    "-" * 50
-)
+    Raises:
+        ValueError: If the path is not a valid file or directory.
+    """
+    if path.is_file():
+        return [path]
 
-NO_ERROR_HEADER = (
-    "-" * 50 +
-    "\n              NO ERRORS FOUND\n" +
-    "-" * 50
-)
-
-SUMMARY_HEADER = (
-    "-" * 50 +
-    "\n              SUMMARY REPORT\n" +
-    "-" * 50
-)
-
-
-
-def get_log_files(path):
-    """Return a list of all log files (by extension) in a directory and its subdirectories."""
-    log_extensions = {'.log', '.txt'}
-    path_obj = Path(path)
-    files = []
-
-    if path_obj.is_file():
-        return [path_obj]
-    elif path_obj.is_dir():
-        for file in path_obj.rglob('*'):
-            if file.is_file() and file.suffix.lower() in log_extensions:
-                files.append(file)
-        return files
-    else:
+    if not path.is_dir():
         raise ValueError(f"Path '{path}' is not a valid file or directory.")
 
+    return [
+        file for file in path.rglob('*')
+        if file.is_file() and file.suffix.lower() in LOG_EXTENSIONS
+    ]
 
-def analyze_log(filename):
+
+# ===================== CORE ANALYSIS =====================
+def analyze_log(filename: Path) -> tuple[int, Counter, Counter, list[str]]:
+    """
+    Analyze a log file and extract statistics.
+
+    Args:
+        filename (Path): Path to the log file.
+
+    Returns:
+        tuple[int, Counter, Counter, list[str]]:
+            - Total line count
+            - IP address counter
+            - Error keyword counter
+            - Preview of the last MAX_PREVIEW_LINES lines
+    """
     line_count = 0
-    ip_count = {}
-    error_count = {}
+    ip_count = Counter()
+    error_count = Counter()
     log_preview = []
-    max_preview_lines = 100
 
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             line_count += 1
-            if len(log_preview) >= max_preview_lines:
+
+            if len(log_preview) >= MAX_PREVIEW_LINES:
                 log_preview.pop(0)
             log_preview.append(line.strip())
-            for ip in re.findall(IP_PATTERN, line):
-                ip_count[ip] = ip_count.get(ip, 0) + 1
+
+            ip_count.update(re.findall(IP_PATTERN, line))
 
             for error in re.findall(ERROR_PATTERN, line, re.IGNORECASE):
-                error = error.upper()
-                error_count[error] = error_count.get(error, 0) + 1
+                error_count[error.upper()] += 1
 
     return line_count, ip_count, error_count, log_preview
 
 
-def generate_report(filename, line_count, ip_count, error_count, log_preview, analysis_time):
+# ===================== REPORT GENERATION =====================
+def generate_report(
+    filename: Path,
+    line_count: int,
+    ip_count: Counter,
+    error_count: Counter,
+    log_preview: list[str],
+    analysis_time: str
+) -> str:
+    """
+    Generate a formatted report from log analysis results.
 
-    report = []
+    Args:
+        filename (Path): Name of the analyzed log file.
+        line_count (int): Total number of lines in the file.
+        ip_count (Counter): Counter of IP addresses.
+        error_count (Counter): Counter of error keywords.
+        log_preview (list[str]): Preview of the last MAX_PREVIEW_LINES lines.
+        analysis_time (str): Timestamp of the analysis.
 
-    report.append(HEADER)
-    report.append(f"""File          : {filename}
-Status        : Completed Successfully
-Total Lines   : {line_count}
-Analysis Date : {analysis_time}
-""")
+    Returns:
+        str: Formatted report as a single string.
+    """
+    report = [
+        HEADER,
+        f"File          : {filename}",
+        f"Status        : Completed Successfully",
+        f"Total Lines   : {line_count}",
+        f"Analysis Date : {analysis_time}",
+        "",
+        SECTION_HEADERS["log_content"],
+        *log_preview,
+    ]
 
-    report.append(LOG_CONTENT_HEADER)
-    for line in log_preview:
-        report.append(line)
-
+    # IP Addresses Section
+    report.append(SECTION_HEADERS["ip"] if ip_count else SECTION_HEADERS["no_ip"])
     if ip_count:
-        report.append(IP_HEADER)
-        for ip, count in sorted(ip_count.items(), key=lambda x: x[1], reverse=True):
-            report.append(f"{ip} → {count}")
+        report.extend(f"{ip} → {count}" for ip, count in ip_count.most_common())
     else:
-        report.append(NO_IP_HEADER)
         report.append("No IP addresses found in the log file.")
 
+    # Errors Section
+    report.append(SECTION_HEADERS["errors"] if error_count else SECTION_HEADERS["no_errors"])
     if error_count:
-        report.append(ERROR_HEADER)
-        for error, count in sorted(error_count.items(), key=lambda x: x[1], reverse=True):
-            report.append(f"{error} → {count}")
+        report.extend(f"{error} → {count}" for error, count in error_count.most_common())
     else:
-        report.append(NO_ERROR_HEADER)
         report.append("No errors found in the log file.")
 
-    report.append(SUMMARY_HEADER)
-    report.append(f"Total Lines   : {line_count}")
-    report.append(f"Total IPs     : {sum(ip_count.values())}")
-    report.append(f"Unique IPs    : {len(ip_count)}")
-    report.append(f"Total Errors  : {sum(error_count.values())}")
-    report.append(f"Unique Errors : {len(error_count)}")
-
-    report.append(FOOTER)
+    # Summary Section
+    report.extend([
+        SECTION_HEADERS["summary"],
+        f"Total Lines   : {line_count}",
+        f"Total IPs     : {sum(ip_count.values())}",
+        f"Unique IPs    : {len(ip_count)}",
+        f"Total Errors  : {sum(error_count.values())}",
+        f"Unique Errors : {len(error_count)}",
+        FOOTER,
+    ])
 
     return "\n".join(report)
 
 
-def export_to_json(filename, line_count, ip_count, error_count, log_preview, analysis_time):
+# ===================== EXPORT FUNCTIONS =====================
+def export_to_json(
+    filename: Path,
+    line_count: int,
+    ip_count: Counter,
+    error_count: Counter,
+    log_preview: list[str],
+    analysis_time: str
+) -> None:
+    """
+    Export analysis results to a JSON file with a timestamp.
+
+    Args:
+        filename (Path): Name of the analyzed log file.
+        line_count (int): Total number of lines.
+        ip_count (Counter): Counter of IP addresses.
+        error_count (Counter): Counter of error keywords.
+        log_preview (list[str]): Preview of log lines.
+        analysis_time (str): Timestamp of the analysis.
+
+    Returns:
+        None
+    """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     json_filename = f"report_{timestamp}.json"
+
     report_data = {
-        "file": filename,
+        "file": str(filename),
         "analysis_date": analysis_time,
         "total_lines": line_count,
-        "ip_addresses": ip_count,
-        "errors": error_count,
-        "log_content": log_preview
+        "ip_addresses": dict(ip_count),
+        "errors": dict(error_count),
+        "log_content": log_preview,
     }
 
-    with open(json_filename, "w", encoding="utf-8") as file:
-        json.dump(report_data, file, indent=4, ensure_ascii=False)
+    Path(json_filename).write_text(
+        json.dumps(report_data, indent=4, ensure_ascii=False),
+        encoding="utf-8"
+    )
     print(f"Report exported to {json_filename}")
 
+# ===================== EXPORT FUNCTIONS =====================
+def export_to_txt(report_text: str) -> None:
+    """
+    Export the report text to a timestamped TXT file.
 
-def export_to_txt(report_text):
+    Args:
+        report_text (str): The formatted report text to export.
+
+    Returns:
+        None
+    """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     txt_filename = f"report_{timestamp}.txt"
-    with open(txt_filename, "w", encoding="utf-8") as file:
-        file.write(report_text)
+
+    Path(txt_filename).write_text(report_text, encoding="utf-8")
     print(f"Report exported to {txt_filename}")
 
 
-def main():
+# ===================== MAIN =====================
+def main() -> None:
+    """
+    Main entry point for the Log Analyzer tool.
+
+    Orchestrates the entire workflow:
+    1. Get user input (file or directory path).
+    2. Discover log files.
+    3. Analyze each file.
+    4. Generate and export reports.
+    """
     print("Welcome to the Log Analyzer Tool")
+
+    user_input = input("Enter the log file or directory path: ").strip()
+    if not user_input:
+        print("Error: No path provided.")
+        return
+
     try:
-        user_input = input("Enter the log file or directory path: ").strip()
-        if not user_input:
-            print("Error: No path provided.")
-            return
+        log_files = get_log_files(Path(user_input))
+    except ValueError as ve:
+        print(f"Error: {ve}")
+        return
+
+    if not log_files:
+        print(f"No log files found in the specified path: '{user_input}'")
+        return
+
+    for file_path in log_files:
+        print(f"\n--- Analyzing: {file_path} ---")
+        analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
-            log_files = get_log_files(user_input)
-        except ValueError as ve:
-            print(f"Error: {ve}")
-            return
+            line_count, ip_count, error_count, log_preview = analyze_log(file_path)
+        except (PermissionError, UnicodeDecodeError, OSError) as e:
+            print(f"Error analyzing {file_path}: {e}")
+            continue
+        except Exception as e:
+            print(f"Unexpected error analyzing {file_path}: {e}")
+            continue
 
-        if not log_files:
-            print(f"No log files found in the specified path: '{user_input}'")
-            return
+        report_text = generate_report(
+            file_path,
+            line_count,
+            ip_count,
+            error_count,
+            log_preview,
+            analysis_time
+        )
 
-        for file_path in log_files:
-            print(f"\n--- Analyzing: {file_path} ---")
-            filename = str(file_path)
-            analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            line_count, ip_count, error_count, log_preview = analyze_log(filename)
-
-            report_text = generate_report(
-                filename,
-                line_count,
-                ip_count,
-                error_count,
-                log_preview,
-                analysis_time
-            )
-
-            print(report_text)
-            export_to_txt(report_text)
-            export_to_json(
-                filename,
-                line_count,
-                ip_count,
-                error_count,
-                log_preview,
-                analysis_time
-            )
-
-    except PermissionError:
-        print(f"Error: Permission denied. You do not have read access to '{user_input}'.")
-        return
-
-    except UnicodeDecodeError:
-        print(f"Error: The file '{user_input}' is not a valid UTF-8 text file. Please check its encoding.")
-        return
-
-    except OSError as e:
-        print(f"Error: An operating system error occurred. Details: {e}")
-        return
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(report_text)
+        export_to_txt(report_text)
+        export_to_json(
+            file_path,
+            line_count,
+            ip_count,
+            error_count,
+            log_preview,
+            analysis_time
+        )
 
 
 if __name__ == "__main__":

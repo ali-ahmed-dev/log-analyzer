@@ -64,6 +64,7 @@ log-analyzer/
 
 - Python 3
 - pathlib
+- collections (Counter)
 - Regular Expressions (`re`)
 - JSON
 - datetime
@@ -130,7 +131,7 @@ This project is licensed under the MIT License.
 
 ## Version
 
-**v1.2.0**
+**v1.3.0**
 
 ---
 

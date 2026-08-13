@@ -54,8 +54,8 @@ Larger features planned for future major versions.
 
 | Version                  | Status     |
 | ------------------------ | ---------- |
-| **Current Release**      | **v1.2.0** |
-| **Next Planned Release** | **v1.2.0** |
+| **Current Release**      | **v1.3.0** |
+| **Next Planned Release** | **v1.4.0** |
 
 ---
 
