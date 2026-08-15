@@ -1,5 +1,6 @@
 import re
 import json
+import argparse
 from pathlib import Path
 from datetime import datetime
 from collections import Counter
@@ -32,12 +33,13 @@ MAX_PREVIEW_LINES = 100
 
 
 # ===================== FILE DISCOVERY =====================
-def get_log_files(path: Path) -> list[Path]:
+def get_log_files(path: Path, recursive: bool = True) -> list[Path]:
     """
-    Return a list of all log files in a directory (recursively) or a single file.
+    Return a list of all log files in a directory or a single file.
 
     Args:
         path (Path): File or directory path.
+        recursive (bool): Whether to search subdirectories.
 
     Returns:
         list[Path]: List of log file paths.
@@ -51,10 +53,16 @@ def get_log_files(path: Path) -> list[Path]:
     if not path.is_dir():
         raise ValueError(f"Path '{path}' is not a valid file or directory.")
 
-    return [
-        file for file in path.rglob('*')
-        if file.is_file() and file.suffix.lower() in LOG_EXTENSIONS
-    ]
+    if recursive:
+        return [
+            file for file in path.rglob('*')
+            if file.is_file() and file.suffix.lower() in LOG_EXTENSIONS
+        ]
+    else:
+        return [
+            file for file in path.glob('*')
+            if file.is_file() and file.suffix.lower() in LOG_EXTENSIONS
+        ]
 
 
 # ===================== CORE ANALYSIS =====================
@@ -162,24 +170,18 @@ def export_to_json(
     ip_count: Counter,
     error_count: Counter,
     log_preview: list[str],
-    analysis_time: str
+    analysis_time: str,
+    output_dir: Path = None
 ) -> None:
-    """
-    Export analysis results to a JSON file with a timestamp.
+    """Export analysis results to a JSON file with a timestamp."""
+    if output_dir is None:
+        output_dir = Path.cwd()
 
-    Args:
-        filename (Path): Name of the analyzed log file.
-        line_count (int): Total number of lines.
-        ip_count (Counter): Counter of IP addresses.
-        error_count (Counter): Counter of error keywords.
-        log_preview (list[str]): Preview of log lines.
-        analysis_time (str): Timestamp of the analysis.
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    Returns:
-        None
-    """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     json_filename = f"report_{timestamp}.json"
+    report_path = output_dir / json_filename
 
     report_data = {
         "file": str(filename),
@@ -190,60 +192,131 @@ def export_to_json(
         "log_content": log_preview,
     }
 
-    Path(json_filename).write_text(
-        json.dumps(report_data, indent=4, ensure_ascii=False),
-        encoding="utf-8"
-    )
-    print(f"Report exported to {json_filename}")
+    try:
+        report_path.write_text(
+            json.dumps(report_data, indent=4, ensure_ascii=False),
+            encoding="utf-8"
+        )
+        print(f"JSON report exported to {report_path}")
+    except (PermissionError, OSError) as e:
+        print(f"Error: Could not write JSON report to {report_path}. {e}")
 
-# ===================== EXPORT FUNCTIONS =====================
-def export_to_txt(report_text: str) -> None:
-    """
-    Export the report text to a timestamped TXT file.
 
-    Args:
-        report_text (str): The formatted report text to export.
+def export_to_txt(report_text: str, output_dir: Path = None) -> None:
+    """Export the report text to a timestamped TXT file."""
+    if output_dir is None:
+        output_dir = Path.cwd()
 
-    Returns:
-        None
-    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     txt_filename = f"report_{timestamp}.txt"
+    report_path = output_dir / txt_filename
 
-    Path(txt_filename).write_text(report_text, encoding="utf-8")
-    print(f"Report exported to {txt_filename}")
+    try:
+        report_path.write_text(report_text, encoding="utf-8")
+        print(f"TXT report exported to {report_path}")
+    except (PermissionError, OSError) as e:
+        print(f"Error: Could not write TXT report to {report_path}. {e}")
 
 
 # ===================== MAIN =====================
 def main() -> None:
     """
-    Main entry point for the Log Analyzer tool.
-
-    Orchestrates the entire workflow:
-    1. Get user input (file or directory path).
-    2. Discover log files.
-    3. Analyze each file.
-    4. Generate and export reports.
+    Main entry point for the Log Analyzer tool (CLI version).
     """
-    print("Welcome to the Log Analyzer Tool")
+    parser = argparse.ArgumentParser(
+        description="Analyze log files, detect IPs and errors, and generate reports.",
+        epilog="""
+Examples:
+  %(prog)s /var/log/syslog
+  %(prog)s /var/log/ -f json -o ./reports
+  %(prog)s /var/log/ --format both --verbose
+  %(prog)s /path/to/file.log --quiet
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
 
-    user_input = input("Enter the log file or directory path: ").strip()
-    if not user_input:
-        print("Error: No path provided.")
+    parser.add_argument(
+        "path",
+        help="Path to a log file or a directory containing log files (.log, .txt)"
+    )
+
+    parser.add_argument(
+        "-f", "--format",
+        choices=["txt", "json", "both"],
+        default="both",
+        help="Output format: txt, json, or both (default: both)"
+    )
+
+    parser.add_argument(
+        "-o", "--output",
+        help="Directory to save reports (default: current directory)"
+    )
+
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Search subdirectories recursively (enabled by default)"
+    )
+
+    parser.add_argument(
+        "--no-recursive",
+        action="store_true",
+        help="Disable recursive directory scanning (only top-level directory)"
+    )
+
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Print detailed progress during analysis"
+    )
+
+    parser.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress all output except errors and report generation messages"
+    )
+
+    args = parser.parse_args()
+
+    # Validate input path
+    input_path = Path(args.path)
+    if not input_path.exists():
+        print(f"Error: Path '{args.path}' does not exist.")
         return
 
+    # Determine recursive behavior
+    recursive = True
+    if args.no_recursive:
+        recursive = False
+
+    # Determine output directory
+    output_dir = Path(args.output) if args.output else Path.cwd()
+
+    # Create output directory if it doesn't exist
     try:
-        log_files = get_log_files(Path(user_input))
+        output_dir.mkdir(parents=True, exist_ok=True)
+    except (PermissionError, OSError) as e:
+        print(f"Error: Could not create output directory '{output_dir}'. {e}")
+        return
+
+    # Get log files
+    try:
+        log_files = get_log_files(input_path, recursive)
     except ValueError as ve:
         print(f"Error: {ve}")
         return
 
     if not log_files:
-        print(f"No log files found in the specified path: '{user_input}'")
+        print(f"No log files found in: '{args.path}'")
         return
 
+    # Process each file
     for file_path in log_files:
-        print(f"\n--- Analyzing: {file_path} ---")
+        if not args.quiet:
+            print(f"\n--- Analyzing: {file_path} ---")
+
         analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
@@ -264,17 +337,25 @@ def main() -> None:
             analysis_time
         )
 
-        print(report_text)
-        export_to_txt(report_text)
-        export_to_json(
-            file_path,
-            line_count,
-            ip_count,
-            error_count,
-            log_preview,
-            analysis_time
-        )
+        # Export based on format
+        if args.format in ("txt", "both"):
+            export_to_txt(report_text, output_dir)
+        if args.format in ("json", "both"):
+            export_to_json(
+                file_path,
+                line_count,
+                ip_count,
+                error_count,
+                log_preview,
+                analysis_time,
+                output_dir
+            )
+
+    if not args.quiet:
+        print(f"\nAll reports saved to: {output_dir}")
 
 
 if __name__ == "__main__":
     main()
+
+# ===================== END OF FILE =====================

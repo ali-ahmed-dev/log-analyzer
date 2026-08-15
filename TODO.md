@@ -23,7 +23,7 @@ These features will improve usability and flexibility.
 
 * [✓] Add support for recursive directory scanning.
 * [ ] Support additional log formats (JSON, Apache, and Nginx logs).
-* [ ] Add command-line argument support using `argparse`.
+* [✓] Add command-line argument support using `argparse`.
 * [ ] Expand report statistics with additional analysis details.
 
 ---
@@ -54,8 +54,8 @@ Larger features planned for future major versions.
 
 | Version                  | Status     |
 | ------------------------ | ---------- |
-| **Current Release**      | **v1.3.0** |
-| **Next Planned Release** | **v1.4.0** |
+| **Current Release**      | **v1.4.0** |
+| **Next Planned Release** | **v1.5.0** |
 
 ---
 
