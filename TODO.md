@@ -1,4 +1,3 @@
-
 # TODO - Log Analyzer
 
 This document outlines the planned improvements and future roadmap for **Log Analyzer**. The project is fully functional in its current release (**v1.0.0**), and the items below represent planned enhancements for future versions.
@@ -54,10 +53,9 @@ Larger features planned for future major versions.
 
 | Version                  | Status     |
 | ------------------------ | ---------- |
-| **Current Release**      | **v1.4.0** |
-| **Next Planned Release** | **v1.5.0** |
+| **Current Release**      | **v1.5.0** |
+| **Next Planned Release** | **v1.6.0** |
 
 ---
 
 Contributions, suggestions, and feature requests are always welcome as the project continues to evolve.
-

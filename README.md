@@ -21,6 +21,7 @@ Built with Python's standard library, with a focus on **performance, reliability
 - Support multiple output formats: TXT, JSON, or both.
 - Configurable output directory.
 - Verbose and quiet execution modes.
+- **Version flag** (`--version`) to display the current tool version.
 - Uses only Python's standard library.
 
 ---
@@ -31,7 +32,7 @@ Built with Python's standard library, with a focus on **performance, reliability
 
 ```bash
 git clone https://github.com/ali-ahmed-dev/log-analyzer.git
-```
+````
 
 ### 2. Navigate to the project directory
 
@@ -65,13 +66,16 @@ By default, reports are generated in the current working directory.
 
 ## Command-Line Options
 
-| Option | Description |
-|--------|-------------|
-| `-f`, `--format` | Output format: `txt`, `json`, or `both`. Default: `both`. |
-| `-o`, `--output` | Directory where reports will be saved. Default: current directory. |
-| `-v`, `--verbose` | Display detailed analysis progress. |
-| `-q`, `--quiet` | Minimize console output. |
-| `-h`, `--help` | Display the help message and exit. |
+| Option            | Description                                                        |
+| ----------------- | ------------------------------------------------------------------ |
+| `-f`, `--format`  | Output format: `txt`, `json`, or `both`. Default: `both`.          |
+| `-o`, `--output`  | Directory where reports will be saved. Default: current directory. |
+| `-v`, `--verbose` | Display detailed analysis progress.                                |
+| `-q`, `--quiet`   | Minimize console output.                                           |
+| `--version`       | Display the current version and exit.                              |
+| `-h`, `--help`    | Display the help message and exit.                                 |
+
+---
 
 ### Output Formats
 
@@ -133,6 +137,12 @@ python log_analyzer.py /path/to/file.log --quiet
 python log_analyzer.py --help
 ```
 
+### Display version
+
+```bash
+python log_analyzer.py --version
+```
+
 ---
 
 ## How It Works
@@ -141,25 +151,25 @@ The analyzer processes each file sequentially:
 
 ```text
 Input File / Directory
-        │
-        ▼
+        |
+        v
   File Discovery
-        │
-        ▼
+        |
+        v
     Log Reading
-        │
-        ├── Line Count
-        ├── IP Detection
-        └── Error Detection
-        │
-        ▼
+        |
+        +-- Line Count
+        +-- IP Detection
+        +-- Error Detection
+        |
+        v
    Result Aggregation
-        │
-        ▼
+        |
+        v
    Report Generation
-        │
-        ├── TXT
-        └── JSON
+        |
+        +-- TXT
+        +-- JSON
 ```
 
 For directories, the tool searches recursively for supported log files.
@@ -176,15 +186,15 @@ This allows the analyzer to process large files without keeping the entire file 
 
 ```text
 Large Log File
-      │
-      ▼
+      |
+      v
  Read line by line
-      │
-      ├── Count lines
-      ├── Detect IPs
-      ├── Detect errors
-      │
-      ▼
+      |
+      +-- Count lines
+      +-- Detect IPs
+      +-- Detect errors
+      |
+      v
  Keep only last 100 lines
 ```
 
@@ -199,9 +209,9 @@ The analyzer detects IPv4 addresses using a regular expression and counts their 
 Example:
 
 ```text
-192.168.1.100 → 45
-10.0.0.5 → 12
-172.16.0.10 → 7
+192.168.1.100 -> 45
+10.0.0.5 -> 12
+172.16.0.10 -> 7
 ```
 
 ### Error Keywords
@@ -224,9 +234,9 @@ Results are sorted by frequency.
 Example:
 
 ```text
-ERROR → 8
-WARNING → 3
-CRITICAL → 1
+ERROR -> 8
+WARNING -> 3
+CRITICAL -> 1
 ```
 
 ---
@@ -254,14 +264,14 @@ Analysis Date : 2026-08-15 14:35:12
 --------------------------------------------------
           IP ADDRESSES OCCURRENCES
 --------------------------------------------------
-192.168.1.100 → 45
-10.0.0.5 → 12
+192.168.1.100 -> 45
+10.0.0.5 -> 12
 
 --------------------------------------------------
             ERRORS OCCURRENCES
 --------------------------------------------------
-ERROR → 8
-WARNING → 3
+ERROR -> 8
+WARNING -> 3
 
 --------------------------------------------------
               SUMMARY REPORT
@@ -308,38 +318,38 @@ Example structure:
 
 ```text
 log-analyzer/
-│
-├── log_analyzer.py
-├── README.md
-├── LICENSE
-└── .gitignore
+|
++-- log_analyzer.py
++-- README.md
++-- LICENSE
++-- .gitignore
 ```
 
 ---
 
 ## Technologies
 
-- **Python 3**
-- **argparse** — command-line interface
-- **pathlib** — file and directory handling
-- **collections.Counter** — efficient frequency counting
-- **re** — regular expression-based detection
-- **json** — structured report generation
-- **datetime** — timestamps for reports
+* **Python 3**
+* **argparse** - command-line interface
+* **pathlib** - file and directory handling
+* **collections.Counter** - efficient frequency counting
+* **re** - regular expression-based detection
+* **json** - structured report generation
+* **datetime** - timestamps for reports
 
 ---
 
 ## Requirements
 
-- Python 3.x
-- No external dependencies
-- Uses Python Standard Library only
+* Python 3.x
+* No external dependencies
+* Uses Python Standard Library only
 
 ---
 
 ## Current Version
 
-**v1.4.0**
+**v1.5.0**
 
 ---
 
@@ -349,16 +359,17 @@ The project started as a simple Python log-analysis script and has gradually evo
 
 Major improvements include:
 
-- IP address detection
-- Error keyword detection
-- Frequency-based result sorting
-- Memory-efficient log processing
-- Recursive directory scanning
-- TXT report generation
-- JSON report generation
-- Improved exception handling
-- Type hints and documentation
-- Command-line interface
+* IP address detection
+* Error keyword detection
+* Frequency-based result sorting
+* Memory-efficient log processing
+* Recursive directory scanning
+* TXT report generation
+* JSON report generation
+* Improved exception handling
+* Type hints and documentation
+* Command-line interface
+* Unified code structure and `--version` flag
 
 The project is continuously evolving alongside the author's development in **Python, algorithms, web development, Linux, networking, and cybersecurity**.
 
@@ -370,21 +381,21 @@ The project will evolve gradually as new requirements, ideas, and skills emerge.
 
 Potential future improvements include:
 
-- Advanced CLI capabilities
-- Configurable log parsing
-- Support for Apache and Nginx log formats
-- Compressed log file support
-- Performance optimizations
-- HTML report generation
-- SQLite integration
-- Security-oriented detection rules
-- Brute-force detection
-- Threat intelligence integration
-- Anomaly detection
-- Network-based log collection
-- API integration
-- Containerized deployment
-- Advanced security monitoring
+* Advanced CLI capabilities
+* Configurable log parsing
+* Support for Apache and Nginx log formats
+* Compressed log file support
+* Performance optimizations
+* HTML report generation
+* SQLite integration
+* Security-oriented detection rules
+* Brute-force detection
+* Threat intelligence integration
+* Anomaly detection
+* Network-based log collection
+* API integration
+* Containerized deployment
+* Advanced security monitoring
 
 > These are long-term ideas rather than a fixed roadmap. Features will be added progressively as the project matures.
 
@@ -396,11 +407,11 @@ Log Analyzer is designed primarily as a **log analysis and security-oriented dev
 
 Log files may contain sensitive information such as:
 
-- IP addresses
-- Usernames
-- URLs
-- Authentication events
-- Server information
+* IP addresses
+* Usernames
+* URLs
+* Authentication events
+* Server information
 
 Always ensure that you have permission to analyze the logs you process and avoid sharing sensitive log data publicly.
 
@@ -418,5 +429,5 @@ See the [LICENSE](LICENSE) file for details.
 
 **Ali Ahmed**
 
-GitHub:  
+GitHub:
 https://github.com/ali-ahmed-dev
