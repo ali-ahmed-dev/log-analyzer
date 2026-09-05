@@ -1,5 +1,11 @@
 # Log Analyzer
 
+![Python Version](https://img.shields.io/badge/python-3.x-blue?logo=python)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-16%20passed-brightgreen)
+![Version](https://img.shields.io/badge/version-1.5.0-orange)
+[![GitHub stars](https://img.shields.io/github/stars/ali-ahmed-dev/log-analyzer?style=social)](https://github.com/ali-ahmed-dev/log-analyzer/stargazers)
+
 A lightweight Python tool for analyzing log files, detecting IP addresses and error keywords, and generating structured reports in **TXT** and **JSON** formats.
 
 Built with Python's standard library, with a focus on **performance, reliability, maintainability, and security-oriented log analysis**.
@@ -8,35 +14,30 @@ Built with Python's standard library, with a focus on **performance, reliability
 
 ## Features
 
-- Analyze single log files or scan directories recursively for `.log` and `.txt` files (with option to disable recursion).
-- Count total log lines.
-- Detect and count IP addresses.
-- Detect and count common error keywords.
-- Sort IP addresses and errors by frequency.
-- Keep only the last 100 log lines in memory for preview.
-- Generate formatted TXT reports.
-- Export structured JSON analysis reports.
-- Continue processing when an individual file cannot be analyzed.
-- Command-line interface (CLI) powered by `argparse`.
-- Support multiple output formats: TXT, JSON, or both.
-- Configurable output directory.
-- Verbose and quiet execution modes.
-- **Version flag** (`--version`) to display the current tool version.
-- Uses only Python's standard library.
+* Analyze single log files or scan directories recursively for `.log` and `.txt` files
+* Count total log lines
+* Detect and count IP addresses
+* Detect and count common error keywords
+* Sort IP addresses and errors by frequency
+* Keep only the last 100 log lines in memory for preview
+* Generate formatted TXT reports
+* Export structured JSON analysis reports
+* Continue processing when an individual file cannot be analyzed
+* Command-line interface (CLI) powered by `argparse`
+* Support TXT, JSON, or both output formats
+* Configurable output directory
+* Verbose and quiet execution modes
+* Version flag (`--version`)
+* Uses only Python's standard library
 
 ---
 
 ## Installation
 
-### 1. Clone the repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/ali-ahmed-dev/log-analyzer.git
-````
-
-### 2. Navigate to the project directory
-
-```bash
 cd log-analyzer
 ```
 
@@ -44,17 +45,51 @@ No external Python packages are required.
 
 ---
 
+## Testing
+
+The project includes a test suite using `pytest`.
+
+### Install pytest
+
+```bash
+pip install pytest
+```
+
+### Run Tests
+
+```bash
+pytest tests/ -v
+```
+
+### Test Coverage
+
+Currently, **16 tests** cover the core functionality:
+
+| Test Area               | Status |
+| ----------------------- | ------ |
+| IP address detection    | ✅      |
+| Error keyword detection | ✅      |
+| File analysis           | ✅      |
+| Directory scanning      | ✅      |
+| TXT report generation   | ✅      |
+| JSON report generation  | ✅      |
+| Edge cases              | ✅      |
+
+All tests pass successfully.
+
+---
+
 ## Usage
 
-The tool accepts either a **single log file** or a **directory containing log files**.
+The tool accepts either a single log file or a directory containing log files.
 
-### Analyze a single file
+### Analyze a Single File
 
 ```bash
 python log_analyzer.py /path/to/logfile.log
 ```
 
-### Analyze a directory
+### Analyze a Directory
 
 ```bash
 python log_analyzer.py /path/to/logs/
@@ -75,8 +110,6 @@ By default, reports are generated in the current working directory.
 | `--version`       | Display the current version and exit.                              |
 | `-h`, `--help`    | Display the help message and exit.                                 |
 
----
-
 ### Output Formats
 
 #### TXT
@@ -93,7 +126,7 @@ Generates a human-readable formatted report.
 python log_analyzer.py server.log --format json
 ```
 
-Generates structured analysis data suitable for further processing.
+Generates structured analysis data.
 
 #### Both
 
@@ -107,37 +140,37 @@ Generates both TXT and JSON reports.
 
 ## Examples
 
-### Analyze a single log file
+### Analyze a Single Log File
 
 ```bash
 python log_analyzer.py /var/log/syslog
 ```
 
-### Analyze a directory and export JSON reports
+### Analyze a Directory and Export JSON Reports
 
 ```bash
 python log_analyzer.py /var/log/ --format json --output ./reports
 ```
 
-### Analyze a directory with verbose output
+### Analyze a Directory with Verbose Output
 
 ```bash
 python log_analyzer.py /var/log/ --verbose
 ```
 
-### Analyze a file with quiet mode
+### Analyze a File with Quiet Mode
 
 ```bash
 python log_analyzer.py /path/to/file.log --quiet
 ```
 
-### Display available options
+### Display Help
 
 ```bash
 python log_analyzer.py --help
 ```
 
-### Display version
+### Display Version
 
 ```bash
 python log_analyzer.py --version
@@ -178,11 +211,9 @@ For directories, the tool searches recursively for supported log files.
 
 ## Memory Efficiency
 
-Large log files can consume significant amounts of memory if their entire contents are loaded at once.
-
 Log Analyzer processes files **line by line** and stores only the last **100 lines** for the report preview.
 
-This allows the analyzer to process large files without keeping the entire file in memory.
+This allows large log files to be analyzed without loading the entire file into memory.
 
 ```text
 Large Log File
@@ -216,7 +247,7 @@ Example:
 
 ### Error Keywords
 
-The analyzer detects common error-related keywords such as:
+The analyzer detects common error-related keywords:
 
 ```text
 ERROR
@@ -289,8 +320,6 @@ Unique Errors : 3
 
 ### JSON Report
 
-The JSON report contains structured information that can be consumed by other programs or future automation workflows.
-
 Example structure:
 
 ```json
@@ -323,19 +352,25 @@ log-analyzer/
 +-- README.md
 +-- LICENSE
 +-- .gitignore
++-- tests/
+|   +-- __init__.py
+|   +-- conftest.py
+|   +-- test_analyzer.py
++-- pytest.ini
 ```
 
 ---
 
 ## Technologies
 
-* **Python 3**
-* **argparse** - command-line interface
-* **pathlib** - file and directory handling
-* **collections.Counter** - efficient frequency counting
-* **re** - regular expression-based detection
-* **json** - structured report generation
-* **datetime** - timestamps for reports
+* **Python 3** - Core language
+* **argparse** - Command-line interface
+* **pathlib** - File and directory handling
+* **collections.Counter** - Frequency counting
+* **re** - Regular expression-based detection
+* **json** - Structured report generation
+* **datetime** - Report timestamps
+* **pytest** - Testing framework
 
 ---
 
@@ -343,19 +378,19 @@ log-analyzer/
 
 * Python 3.x
 * No external dependencies
-* Uses Python Standard Library only
+* Python Standard Library only
 
 ---
 
 ## Current Version
 
-**v1.5.0**
+**v1.5.1**
 
 ---
 
 ## Development History
 
-The project started as a simple Python log-analysis script and has gradually evolved through multiple iterations.
+The project started as a simple Python log-analysis script and evolved through multiple iterations.
 
 Major improvements include:
 
@@ -369,41 +404,37 @@ Major improvements include:
 * Improved exception handling
 * Type hints and documentation
 * Command-line interface
-* Unified code structure and `--version` flag
-
-The project is continuously evolving alongside the author's development in **Python, algorithms, web development, Linux, networking, and cybersecurity**.
+* Version flag
+* Comprehensive test suite
 
 ---
 
-## Future Development
+## Roadmap
 
-The project will evolve gradually as new requirements, ideas, and skills emerge.
+### Short-term
 
-Potential future improvements include:
+* [ ] Add support for Apache and Nginx log formats
+* [ ] Add HTML report generation
+* [ ] Support compressed log files (`.gz`, `.zip`)
+* [ ] Configurable log parsing rules
 
-* Advanced CLI capabilities
-* Configurable log parsing
-* Support for Apache and Nginx log formats
-* Compressed log file support
-* Performance optimizations
-* HTML report generation
-* SQLite integration
+### Long-term
+
 * Security-oriented detection rules
-* Brute-force detection
+* Brute-force attack detection
 * Threat intelligence integration
-* Anomaly detection
+* SQLite database storage
+* Web-based dashboard
 * Network-based log collection
 * API integration
-* Containerized deployment
-* Advanced security monitoring
-
-> These are long-term ideas rather than a fixed roadmap. Features will be added progressively as the project matures.
+* Containerized deployment with Docker
+* Advanced anomaly detection
 
 ---
 
 ## Security
 
-Log Analyzer is designed primarily as a **log analysis and security-oriented development project**.
+Log Analyzer is designed as a **log analysis and security-oriented development project**.
 
 Log files may contain sensitive information such as:
 
@@ -414,6 +445,20 @@ Log files may contain sensitive information such as:
 * Server information
 
 Always ensure that you have permission to analyze the logs you process and avoid sharing sensitive log data publicly.
+
+---
+
+## Contributing
+
+Contributions, issues, and feature requests are welcome.
+
+1. Fork the repository
+2. Create a new branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+Please update tests when appropriate.
 
 ---
 
@@ -429,5 +474,13 @@ See the [LICENSE](LICENSE) file for details.
 
 **Ali Ahmed**
 
-GitHub:
-https://github.com/ali-ahmed-dev
+* GitHub: [ali-ahmed-dev](https://github.com/ali-ahmed-dev)
+* Project: [Log Analyzer](https://github.com/ali-ahmed-dev/log-analyzer)
+
+---
+
+## Support
+
+If you find this tool useful, consider giving it a ⭐ on GitHub.
+
+[![GitHub stars](https://img.shields.io/github/stars/ali-ahmed-dev/log-analyzer?style=social)](https://github.com/ali-ahmed-dev/log-analyzer/stargazers)

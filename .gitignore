@@ -3,3 +3,6 @@ __pycache__/
 *.log
 *.json
 .env
+.pytest_cache/
+CACHEDIR.TAG
+reports/
