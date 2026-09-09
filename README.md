@@ -3,7 +3,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.x-blue?logo=python)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Tests](https://img.shields.io/badge/tests-16%20passed-brightgreen)
-![Version](https://img.shields.io/badge/version-1.5.0-orange)
+![Version](https://img.shields.io/badge/version-1.5.2-orange)
 [![GitHub stars](https://img.shields.io/github/stars/ali-ahmed-dev/log-analyzer?style=social)](https://github.com/ali-ahmed-dev/log-analyzer/stargazers)
 
 A lightweight Python tool for analyzing log files, detecting IP addresses and error keywords, and generating structured reports in **TXT** and **JSON** formats.
@@ -384,7 +384,7 @@ log-analyzer/
 
 ## Current Version
 
-**v1.5.1**
+**v1.5.2**
 
 ---
 

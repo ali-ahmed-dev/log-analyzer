@@ -271,7 +271,7 @@ Examples:
     parser.add_argument(
         "--version",
         action="version",
-        version="Log Analyzer v1.5.1"
+        version="Log Analyzer v1.5.2"
     )
 
     return parser
