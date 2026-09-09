@@ -1,12 +1,9 @@
 import pytest
-import sys
 import os
+import re
 import json
 from pathlib import Path
 from collections import Counter
-
-# Add parent directory to path so we can import log_analyzer
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from log_analyzer import *
 
