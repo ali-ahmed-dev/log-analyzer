@@ -97,7 +97,8 @@ def test_analyze_log_counts_lines_correctly():
         tmp_path = tmp.name
     
     try:
-        line_count, _, _, _ = analyze_log(Path(tmp_path))
+        # analyze_log now returns 6 values (added HTTP status and methods)
+        line_count, _, _, _, _, _ = analyze_log(Path(tmp_path))
         assert line_count == 3
     finally:
         os.remove(tmp_path)
@@ -122,7 +123,8 @@ def test_analyze_log_extracts_ip_addresses():
         tmp_path = tmp.name
     
     try:
-        _, ip_count, _, _ = analyze_log(Path(tmp_path))
+        # Extract ip_count (second value)
+        _, ip_count, _, _, _, _ = analyze_log(Path(tmp_path))
         
         # IP 192.168.1.1 appears 3 times, 10.0.0.2 appears 1 time
         assert ip_count['192.168.1.1'] == 3
@@ -152,12 +154,79 @@ def test_analyze_log_detects_errors():
         tmp_path = tmp.name
     
     try:
-        _, _, error_count, _ = analyze_log(Path(tmp_path))
+        # Extract error_count (third value)
+        _, _, error_count, _, _, _ = analyze_log(Path(tmp_path))
         
         assert error_count['ERROR'] == 2
         assert error_count['WARNING'] == 1
         assert error_count['CRITICAL'] == 1
         assert len(error_count) == 3
+    finally:
+        os.remove(tmp_path)
+
+
+def test_analyze_log_detects_http_status_codes():
+    """
+    Test that analyze_log() correctly counts HTTP status codes from Apache logs.
+    
+    Why: Status codes reveal failed logins (401), forbidden access (403),
+    server errors (500), and scanning attempts (404) - all security signals.
+    """
+    content = [
+        '192.168.1.1 - - [10/Oct/2023:13:55:36 +0000] "GET /index.html HTTP/1.1" 200 2326',
+        '192.168.1.1 - - [10/Oct/2023:13:55:37 +0000] "GET /about.html HTTP/1.1" 200 1234',
+        '10.0.0.5 - - [10/Oct/2023:13:55:38 +0000] "POST /login.php HTTP/1.1" 401 512',
+        '10.0.0.5 - - [10/Oct/2023:13:55:39 +0000] "POST /login.php HTTP/1.1" 401 512',
+        '10.0.0.6 - - [10/Oct/2023:13:55:41 +0000] "GET /admin.php HTTP/1.1" 404 0',
+        '10.0.0.7 - - [10/Oct/2023:13:55:42 +0000] "DELETE /api/users/1 HTTP/1.1" 500 0',
+    ]
+    
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False, encoding='utf-8') as tmp:
+        tmp.writelines(line + '\n' for line in content)
+        tmp_path = tmp.name
+    
+    try:
+        # Extract http_status_count (fourth value)
+        _, _, _, http_status_count, _, _ = analyze_log(Path(tmp_path))
+        
+        # From sample: 200 x2, 401 x2, 404 x1, 500 x1
+        assert http_status_count[200] == 2
+        assert http_status_count[401] == 2
+        assert http_status_count[404] == 1
+        assert http_status_count[500] == 1
+        assert len(http_status_count) == 4
+    finally:
+        os.remove(tmp_path)
+
+
+def test_analyze_log_detects_http_methods():
+    """
+    Test that analyze_log() correctly counts HTTP methods from Apache logs.
+    
+    Why: Unusual methods (DELETE, PUT, PATCH) can indicate exploitation attempts.
+    """
+    content = [
+        '192.168.1.1 - - [10/Oct/2023:13:55:36 +0000] "GET /index.html HTTP/1.1" 200 2326',
+        '192.168.1.1 - - [10/Oct/2023:13:55:37 +0000] "GET /about.html HTTP/1.1" 200 1234',
+        '10.0.0.5 - - [10/Oct/2023:13:55:38 +0000] "POST /login.php HTTP/1.1" 401 512',
+        '10.0.0.5 - - [10/Oct/2023:13:55:39 +0000] "POST /login.php HTTP/1.1" 401 512',
+        '10.0.0.7 - - [10/Oct/2023:13:55:42 +0000] "DELETE /api/users/1 HTTP/1.1" 500 0',
+    ]
+    
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.log', delete=False, encoding='utf-8') as tmp:
+        tmp.writelines(line + '\n' for line in content)
+        tmp_path = tmp.name
+    
+    try:
+        # Extract http_method_count (fifth value)
+        _, _, _, _, http_method_count, _ = analyze_log(Path(tmp_path))
+        
+        assert http_method_count['GET'] == 2
+        assert http_method_count['POST'] == 2
+        assert http_method_count['DELETE'] == 1
+        assert len(http_method_count) == 3
     finally:
         os.remove(tmp_path)
 
@@ -174,11 +243,14 @@ def test_analyze_log_handles_empty_file():
         tmp_path = tmp.name
     
     try:
-        line_count, ip_count, error_count, preview = analyze_log(Path(tmp_path))
+        # analyze_log now returns 6 values
+        line_count, ip_count, error_count, http_status, http_methods, preview = analyze_log(Path(tmp_path))
         
         assert line_count == 0
         assert len(ip_count) == 0
         assert len(error_count) == 0
+        assert len(http_status) == 0
+        assert len(http_methods) == 0
         assert len(preview) == 0
     finally:
         os.remove(tmp_path)
@@ -198,7 +270,8 @@ def test_log_preview_limited_to_max_lines():
         tmp_path = tmp.name
     
     try:
-        _, _, _, preview = analyze_log(Path(tmp_path))
+        # Extract preview (sixth value)
+        _, _, _, _, _, preview = analyze_log(Path(tmp_path))
         
         # Should only store last MAX_PREVIEW_LINES (100) lines
         assert len(preview) <= MAX_PREVIEW_LINES
@@ -232,7 +305,6 @@ def test_get_log_files_filters_by_extension():
     Why: Should ignore non-log files to avoid parsing errors.
     """
     import tempfile
-    import shutil
     
     # Create a temporary directory with mixed files
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -294,17 +366,22 @@ def test_generate_report_includes_all_sections():
     line_count = 10
     ip_count = Counter({'192.168.1.1': 5, '10.0.0.2': 3})
     error_count = Counter({'ERROR': 2, 'WARNING': 1})
+    http_status_count = Counter({200: 5, 404: 2, 500: 1})
+    http_method_count = Counter({'GET': 6, 'POST': 2})
     log_preview = ['Line 1: Test', 'Line 2: Test']
     analysis_time = '2026-09-06 12:00:00'
     
     report = generate_report(
-        filename, line_count, ip_count, error_count, log_preview, analysis_time
+        filename, line_count, ip_count, error_count,
+        http_status_count, http_method_count, log_preview, analysis_time
     )
     
-    # Verify key sections are present
+    # Verify key sections are present (including new HTTP sections)
     assert 'LOG ANALYZER' in report
     assert 'IP ADDRESSES OCCURRENCES' in report
     assert 'ERRORS OCCURRENCES' in report
+    assert 'HTTP STATUS CODES' in report
+    assert 'HTTP METHODS' in report
     assert 'SUMMARY REPORT' in report
     assert 'END OF REPORT' in report
     
@@ -316,17 +393,28 @@ def test_generate_report_includes_all_sections():
     assert 'ERROR → 2' in report
     assert 'WARNING → 1' in report
     
-    # Verify summary stats
+    # Verify HTTP status codes are listed
+    assert '200 → 5' in report
+    assert '404 → 2' in report
+    assert '500 → 1' in report
+    
+    # Verify HTTP methods are listed
+    assert 'GET → 6' in report
+    assert 'POST → 2' in report
+    
+    # Verify summary stats (including new HTTP totals)
     assert 'Total Lines   : 10' in report
     assert 'Total IPs     : 8' in report
     assert 'Unique IPs    : 2' in report
     assert 'Total Errors  : 3' in report
     assert 'Unique Errors : 2' in report
+    assert 'Total HTTP    : 8' in report
+    assert 'Unique HTTP   : 3' in report
 
 
 def test_generate_report_handles_empty_results():
     """
-    Test that generate_report() handles cases with no IPs or errors.
+    Test that generate_report() handles cases with no IPs, errors, or HTTP data.
     
     Why: Should display friendly messages instead of empty sections.
     """
@@ -334,16 +422,21 @@ def test_generate_report_handles_empty_results():
     line_count = 5
     ip_count = Counter()
     error_count = Counter()
+    http_status_count = Counter()
+    http_method_count = Counter()
     log_preview = ['Line 1', 'Line 2']
     analysis_time = '2026-09-06 12:00:00'
     
     report = generate_report(
-        filename, line_count, ip_count, error_count, log_preview, analysis_time
+        filename, line_count, ip_count, error_count,
+        http_status_count, http_method_count, log_preview, analysis_time
     )
     
-    # Should show "no IP" and "no errors" messages
+    # Should show "no data" messages for all empty sections
     assert 'NO IP ADDRESSES FOUND' in report
     assert 'NO ERRORS FOUND' in report
+    assert 'NO HTTP STATUS CODES FOUND' in report
+    assert 'NO HTTP METHODS FOUND' in report
     assert 'No IP addresses found in the log file.' in report
     assert 'No errors found in the log file.' in report
 
@@ -359,6 +452,8 @@ def test_export_functions_create_files(tmp_path):
     line_count = 10
     ip_count = Counter({'192.168.1.1': 5})
     error_count = Counter({'ERROR': 2})
+    http_status_count = Counter({200: 5, 404: 2})
+    http_method_count = Counter({'GET': 6})
     log_preview = ['Line 1']
     analysis_time = '2026-09-06 12:00:00'
     
@@ -368,16 +463,20 @@ def test_export_functions_create_files(tmp_path):
     assert len(txt_files) == 1
     assert txt_files[0].read_text(encoding='utf-8') == report_text
     
-    # Test JSON export
+    # Test JSON export (now with HTTP fields)
     export_to_json(
-        filename, line_count, ip_count, error_count, 
-        log_preview, analysis_time, tmp_path, quiet=True
+        filename, line_count, ip_count, error_count,
+        http_status_count, http_method_count, log_preview, analysis_time,
+        tmp_path, quiet=True
     )
     json_files = list(tmp_path.glob('report_*.json'))
     assert len(json_files) == 1
     
-    # Verify JSON content
+    # Verify JSON content includes new fields
     data = json.loads(json_files[0].read_text(encoding='utf-8'))
     assert data['file'] == 'test.log'
     assert data['total_lines'] == 10
     assert data['ip_addresses']['192.168.1.1'] == 5
+    assert data['http_status_codes']['200'] == 5
+    assert data['http_status_codes']['404'] == 2
+    assert data['http_methods']['GET'] == 6

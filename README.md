@@ -2,8 +2,8 @@
 
 ![Python Version](https://img.shields.io/badge/python-3.x-blue?logo=python)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Tests](https://img.shields.io/badge/tests-16%20passed-brightgreen)
-![Version](https://img.shields.io/badge/version-1.5.2-orange)
+![Tests](https://img.shields.io/badge/tests-32%20passed-brightgreen)
+![Version](https://img.shields.io/badge/version-1.6.0-orange)
 [![GitHub stars](https://img.shields.io/github/stars/ali-ahmed-dev/log-analyzer?style=social)](https://github.com/ali-ahmed-dev/log-analyzer/stargazers)
 
 A lightweight Python tool for analyzing log files, detecting IP addresses and error keywords, and generating structured reports in **TXT** and **JSON** formats.
@@ -15,6 +15,9 @@ Built with Python's standard library, with a focus on **performance, reliability
 ## Features
 
 * Analyze single log files or scan directories recursively for `.log` and `.txt` files
+* **Automatic detection of Apache/Nginx Combined Log Format**
+* **Extract HTTP status codes (200, 404, 500, ...) from Apache logs**
+* **Extract HTTP methods (GET, POST, PUT, DELETE, ...) from Apache logs**
 * Count total log lines
 * Detect and count IP addresses
 * Detect and count common error keywords
@@ -63,17 +66,20 @@ pytest tests/ -v
 
 ### Test Coverage
 
-Currently, **16 tests** cover the core functionality:
+Currently, **32 tests** cover the core functionality:
 
-| Test Area               | Status |
-| ----------------------- | ------ |
-| IP address detection    | ✅      |
-| Error keyword detection | ✅      |
-| File analysis           | ✅      |
-| Directory scanning      | ✅      |
-| TXT report generation   | ✅      |
-| JSON report generation  | ✅      |
-| Edge cases              | ✅      |
+| Test Area                      | Status |
+| ------------------------------ | ------ |
+| IP address detection           | ✅      |
+| Error keyword detection        | ✅      |
+| File analysis                  | ✅      |
+| Directory scanning             | ✅      |
+| TXT report generation          | ✅      |
+| JSON report generation         | ✅      |
+| **Apache log parsing**         | ✅      |
+| **HTTP status code detection** | ✅      |
+| **HTTP method detection**      | ✅      |
+| Edge cases                     | ✅      |
 
 All tests pass successfully.
 
@@ -146,6 +152,14 @@ Generates both TXT and JSON reports.
 python log_analyzer.py /var/log/syslog
 ```
 
+### Analyze an Apache Access Log
+
+```bash
+python log_analyzer.py /var/log/apache2/access.log
+```
+
+The analyzer automatically detects Apache format and extracts HTTP status codes and methods.
+
 ### Analyze a Directory and Export JSON Reports
 
 ```bash
@@ -186,14 +200,18 @@ The analyzer processes each file sequentially:
 Input File / Directory
         |
         v
-  File Discovery
+   File Discovery
         |
         v
-    Log Reading
+     Log Reading
         |
         +-- Line Count
         +-- IP Detection
         +-- Error Detection
+        +-- Apache Format Detection
+        |     |
+        |     +-- HTTP Status Codes
+        |     +-- HTTP Methods
         |
         v
    Result Aggregation
@@ -224,6 +242,7 @@ Large Log File
       +-- Count lines
       +-- Detect IPs
       +-- Detect errors
+      +-- Detect HTTP status
       |
       v
  Keep only last 100 lines
@@ -272,6 +291,55 @@ CRITICAL -> 1
 
 ---
 
+## Log Formats
+
+### Apache/Nginx Combined Log Format
+
+The analyzer automatically detects and parses the Apache/Nginx Combined Log Format.
+
+**Example line:**
+
+```text
+192.168.1.1 - - [10/Oct/2023:13:55:36 +0000] "GET /index.html HTTP/1.1" 200 2326
+```
+
+**Fields extracted:**
+
+| Field       | Description                         | Example           |
+| ----------- | ----------------------------------- | ----------------- |
+| `ip`        | Client IP address                   | `192.168.1.1`     |
+| `timestamp` | Request date and time               | `10/Oct/2023:...` |
+| `method`    | HTTP method                         | `GET`             |
+| `path`      | Requested resource                  | `/index.html`     |
+| `status`    | HTTP status code                    | `200`             |
+| `size`      | Response size in bytes (`-` = none) | `2326`            |
+
+**Security-relevant status codes:**
+
+| Code | Meaning               | Why It Matters                    |
+| ---- | --------------------- | --------------------------------- |
+| 200  | OK                    | Normal traffic                    |
+| 401  | Unauthorized          | ⚠️ Failed authentication attempts |
+| 403  | Forbidden             | ⚠️ Blocked access attempts        |
+| 404  | Not Found             | ⚠️ Path scanning / enumeration    |
+| 500  | Internal Server Error | 🔴 Potential exploitation         |
+| 503  | Service Unavailable   | 🔴 Potential DDoS                 |
+
+**Supported HTTP methods:**
+
+`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`
+
+### Generic Logs
+
+For non-Apache logs, the analyzer falls back to generic mode:
+
+* IP address detection (via regex)
+* Error keyword detection (via regex)
+
+This ensures compatibility with any log format.
+
+---
+
 ## Report Output
 
 ### TXT Report
@@ -305,6 +373,20 @@ ERROR -> 8
 WARNING -> 3
 
 --------------------------------------------------
+           HTTP STATUS CODES
+--------------------------------------------------
+200 -> 1245
+401 -> 15
+404 -> 8
+
+--------------------------------------------------
+            HTTP METHODS
+--------------------------------------------------
+GET -> 1200
+POST -> 45
+DELETE -> 2
+
+--------------------------------------------------
               SUMMARY REPORT
 --------------------------------------------------
 Total Lines   : 1523
@@ -312,6 +394,8 @@ Total IPs     : 67
 Unique IPs    : 18
 Total Errors  : 11
 Unique Errors : 3
+Total HTTP    : 1268
+Unique HTTP   : 3
 
 ==================================================
                 END OF REPORT
@@ -335,6 +419,16 @@ Example structure:
         "ERROR": 8,
         "WARNING": 3
     },
+    "http_status_codes": {
+        "200": 1245,
+        "401": 15,
+        "404": 8
+    },
+    "http_methods": {
+        "GET": 1200,
+        "POST": 45,
+        "DELETE": 2
+    },
     "log_content": [
         "..."
     ]
@@ -349,6 +443,7 @@ Example structure:
 log-analyzer/
 |
 +-- log_analyzer.py
++-- parsers.py
 +-- README.md
 +-- LICENSE
 +-- .gitignore
@@ -356,6 +451,7 @@ log-analyzer/
 |   +-- __init__.py
 |   +-- conftest.py
 |   +-- test_analyzer.py
+|   +-- test_parsers.py
 +-- pytest.ini
 ```
 
@@ -363,14 +459,14 @@ log-analyzer/
 
 ## Technologies
 
-* **Python 3** - Core language
-* **argparse** - Command-line interface
-* **pathlib** - File and directory handling
-* **collections.Counter** - Frequency counting
-* **re** - Regular expression-based detection
-* **json** - Structured report generation
-* **datetime** - Report timestamps
-* **pytest** - Testing framework
+* **Python 3** — Core language
+* **argparse** — Command-line interface
+* **pathlib** — File and directory handling
+* **collections.Counter** — Frequency counting
+* **re** — Regular expression-based detection
+* **json** — Structured report generation
+* **datetime** — Report timestamps
+* **pytest** — Testing framework
 
 ---
 
@@ -384,7 +480,7 @@ log-analyzer/
 
 ## Current Version
 
-**v1.5.2**
+**v1.6.0**
 
 ---
 
@@ -406,6 +502,9 @@ Major improvements include:
 * Command-line interface
 * Version flag
 * Comprehensive test suite
+* **Apache/Nginx Combined Log Format support**
+* **HTTP status code detection**
+* **HTTP method detection**
 
 ---
 
@@ -413,7 +512,8 @@ Major improvements include:
 
 ### Short-term
 
-* [ ] Add support for Apache and Nginx log formats
+* [x] Add support for Apache log format
+* [ ] Add support for Nginx log format
 * [ ] Add HTML report generation
 * [ ] Support compressed log files (`.gz`, `.zip`)
 * [ ] Configurable log parsing rules

@@ -7,6 +7,8 @@ from pathlib import Path
 from datetime import datetime
 from collections import Counter
 
+from parsers import parse_apache_line, is_apache_format
+
 
 # ===================== CONSTANTS =====================
 SEPARATOR = "=" * 50
@@ -21,6 +23,10 @@ SECTION_HEADERS = {
     "no_ip": f"{DASH_SEPARATOR}\n           NO IP ADDRESSES FOUND\n{DASH_SEPARATOR}",
     "errors": f"{DASH_SEPARATOR}\n            ERRORS OCCURRENCES\n{DASH_SEPARATOR}",
     "no_errors": f"{DASH_SEPARATOR}\n              NO ERRORS FOUND\n{DASH_SEPARATOR}",
+    "http_status": f"{DASH_SEPARATOR}\n           HTTP STATUS CODES\n{DASH_SEPARATOR}",
+    "no_http_status": f"{DASH_SEPARATOR}\n        NO HTTP STATUS CODES FOUND\n{DASH_SEPARATOR}",
+    "http_methods": f"{DASH_SEPARATOR}\n           HTTP METHODS\n{DASH_SEPARATOR}",
+    "no_http_methods": f"{DASH_SEPARATOR}\n         NO HTTP METHODS FOUND\n{DASH_SEPARATOR}",
     "summary": f"{DASH_SEPARATOR}\n              SUMMARY REPORT\n{DASH_SEPARATOR}",
 }
 
@@ -65,23 +71,31 @@ def get_log_files(path: Path, recursive: bool = True) -> list[Path]:
 
 
 # ===================== CORE ANALYSIS =====================
-def analyze_log(filename: Path) -> tuple[int, Counter, Counter, list[str]]:
+def analyze_log(filename: Path) -> tuple[int, Counter, Counter, Counter, Counter, list[str]]:
     """
     Analyze a log file and extract statistics.
 
+    Supports two modes:
+    - Generic mode: detects IPs and error keywords via regex (any log format)
+    - Apache mode: additionally extracts HTTP status codes and methods
+    
     Args:
         filename (Path): Path to the log file.
 
     Returns:
-        tuple[int, Counter, Counter, list[str]]:
-            - Total line count
-            - IP address counter
-            - Error keyword counter
-            - Preview of the last MAX_PREVIEW_LINES lines
+        tuple containing:
+            - Total line count (int)
+            - IP address counter (Counter)
+            - Error keyword counter (Counter)
+            - HTTP status code counter (Counter)
+            - HTTP method counter (Counter)
+            - Preview of the last MAX_PREVIEW_LINES lines (list[str])
     """
     line_count = 0
     ip_count = Counter()
     error_count = Counter()
+    http_status_count = Counter()
+    http_method_count = Counter()
     log_preview = []
 
     with open(filename, "r", encoding="utf-8") as file:
@@ -92,12 +106,20 @@ def analyze_log(filename: Path) -> tuple[int, Counter, Counter, list[str]]:
                 log_preview.pop(0)
             log_preview.append(line.strip())
 
+            # Generic detection (always active)
             ip_count.update(re.findall(IP_PATTERN, line))
 
             for error in re.findall(ERROR_PATTERN, line, re.IGNORECASE):
                 error_count[error.upper()] += 1
 
-    return line_count, ip_count, error_count, log_preview
+            # Apache-specific detection (only if line matches format)
+            if is_apache_format(line):
+                parsed = parse_apache_line(line)
+                if parsed:
+                    http_status_count[parsed['status']] += 1
+                    http_method_count[parsed['method']] += 1
+
+    return line_count, ip_count, error_count, http_status_count, http_method_count, log_preview
 
 
 # ===================== REPORT GENERATION =====================
@@ -106,6 +128,8 @@ def generate_report(
     line_count: int,
     ip_count: Counter,
     error_count: Counter,
+    http_status_count: Counter,
+    http_method_count: Counter,
     log_preview: list[str],
     analysis_time: str
 ) -> str:
@@ -117,6 +141,8 @@ def generate_report(
         line_count (int): Total number of lines in the file.
         ip_count (Counter): Counter of IP addresses.
         error_count (Counter): Counter of error keywords.
+        http_status_count (Counter): Counter of HTTP status codes.
+        http_method_count (Counter): Counter of HTTP methods.
         log_preview (list[str]): Preview of the last MAX_PREVIEW_LINES lines.
         analysis_time (str): Timestamp of the analysis.
 
@@ -148,6 +174,26 @@ def generate_report(
     else:
         report.append("No errors found in the log file.")
 
+    # HTTP Status Codes Section (Apache only)
+    report.append(
+        SECTION_HEADERS["http_status"] if http_status_count 
+        else SECTION_HEADERS["no_http_status"]
+    )
+    if http_status_count:
+        report.extend(f"{status} → {count}" for status, count in http_status_count.most_common())
+    else:
+        report.append("No HTTP status codes found (log may not be in Apache format).")
+
+    # HTTP Methods Section (Apache only)
+    report.append(
+        SECTION_HEADERS["http_methods"] if http_method_count 
+        else SECTION_HEADERS["no_http_methods"]
+    )
+    if http_method_count:
+        report.extend(f"{method} → {count}" for method, count in http_method_count.most_common())
+    else:
+        report.append("No HTTP methods found (log may not be in Apache format).")
+
     # Summary Section
     report.extend([
         SECTION_HEADERS["summary"],
@@ -156,6 +202,8 @@ def generate_report(
         f"Unique IPs    : {len(ip_count)}",
         f"Total Errors  : {sum(error_count.values())}",
         f"Unique Errors : {len(error_count)}",
+        f"Total HTTP    : {sum(http_status_count.values())}",
+        f"Unique HTTP   : {len(http_status_count)}",
         FOOTER,
     ])
 
@@ -182,6 +230,8 @@ def export_to_json(
     line_count: int,
     ip_count: Counter,
     error_count: Counter,
+    http_status_count: Counter,
+    http_method_count: Counter,
     log_preview: list[str],
     analysis_time: str,
     output_dir: Path,
@@ -198,6 +248,8 @@ def export_to_json(
         "total_lines": line_count,
         "ip_addresses": dict(ip_count),
         "errors": dict(error_count),
+        "http_status_codes": {str(k): v for k, v in dict(http_status_count).items()},
+        "http_methods": dict(http_method_count),
         "log_content": log_preview,
     }
 
@@ -273,7 +325,7 @@ Examples:
     parser.add_argument(
         "--version",
         action="version",
-        version="Log Analyzer v1.5.2"
+        version="Log Analyzer v1.6.0"
     )
 
     return parser
@@ -323,7 +375,8 @@ def main(argv: list[str] | None = None) -> int:
         analysis_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
-            line_count, ip_count, error_count, log_preview = analyze_log(file_path)
+            (line_count, ip_count, error_count, 
+             http_status_count, http_method_count, log_preview) = analyze_log(file_path)
         except (PermissionError, UnicodeDecodeError, OSError) as e:
             print(f"Error analyzing {file_path}: {e}")
             continue
@@ -336,6 +389,8 @@ def main(argv: list[str] | None = None) -> int:
             line_count,
             ip_count,
             error_count,
+            http_status_count,
+            http_method_count,
             log_preview,
             analysis_time
         )
@@ -349,6 +404,8 @@ def main(argv: list[str] | None = None) -> int:
                 line_count,
                 ip_count,
                 error_count,
+                http_status_count,
+                http_method_count,
                 log_preview,
                 analysis_time,
                 output_dir,

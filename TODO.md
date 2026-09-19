@@ -21,9 +21,11 @@ These improvements focus on reliability, performance, and maintainability.
 These features will improve usability and flexibility.
 
 * [✓] Add support for recursive directory scanning.
-* [ ] Support additional log formats (JSON, Apache, and Nginx logs).
+* [✓] Add support for Apache log format (HTTP status codes and methods).
+* [ ] Add support for Nginx log format.
+* [ ] Add support for JSON log format.
 * [✓] Add command-line argument support using `argparse`.
-* [✓] Add comprehensive test suite (16 tests).
+* [✓] Add comprehensive test suite (32 tests).
 * [ ] Expand report statistics with additional analysis details.
 
 ---
@@ -54,8 +56,8 @@ Larger features planned for future major versions.
 
 | Version                  | Status     |
 | ------------------------ | ---------- |
-| **Current Release**      | **v1.5.2** |
-| **Next Planned Release** | **v1.6.0** |
+| **Current Release**      | **v1.6.0** |
+| **Next Planned Release** | **v1.6.1** |
 
 ---
 
