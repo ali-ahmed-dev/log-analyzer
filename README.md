@@ -3,6 +3,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.x-blue?logo=python)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Tests](https://img.shields.io/badge/tests-32%20passed-brightgreen)
+![CI](https://github.com/ali-ahmed-dev/log-analyzer/actions/workflows/test.yml/badge.svg)
 ![Version](https://img.shields.io/badge/version-1.6.0-orange)
 [![GitHub stars](https://img.shields.io/github/stars/ali-ahmed-dev/log-analyzer?style=social)](https://github.com/ali-ahmed-dev/log-analyzer/stargazers)
 
